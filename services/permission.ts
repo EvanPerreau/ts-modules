@@ -104,6 +104,29 @@ class Permission implements PermissionData {
         // declare permission variable to store the result
         let permission: PermissionData;
 
+        let permission_exist: Permission | null = null;
+        // test if the permission already exists
+        try {
+            // get the permission by name
+            permission_exist = await Permission.getPermissionByName(name);
+        // if the permission is not found
+        } catch (error) {
+            // if the error is not a permission not found error
+            if ((error as PermissionError).type !== PermissionErrorType.PERMISSION_NOT_FOUND) {
+                // throw the error
+                throw error;
+            }
+        }
+
+        // if the permission already exists
+        if (permission_exist) {
+            // throw a Permission error
+            throw new PermissionError(
+                PermissionErrorType.PERMISSION_ALREADY_EXISTS,
+                `Permission with name ${name} already exists`
+            );
+        }
+
         // try to create the permission
         try {
             // store the created permission in the permission variable

@@ -3,6 +3,7 @@ import * as environment from "./environment";
 import * as password from "./password";
 import * as token from "./token";
 import * as user from "./user";
+import * as permission from "./permission";
 
 async function main(): Promise<void> {
     await Promise.all([
@@ -10,6 +11,7 @@ async function main(): Promise<void> {
         environment.test,
         password.test,
         token.test,
-        user.test
+        user.test,
+        permission.test
     ]);
 }
