@@ -106,5 +106,6 @@ abstract class Password {
 
 export {
     Password,
-    PasswordError
+    PasswordError,
+    PasswordErrorType,
 };

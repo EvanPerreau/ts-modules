@@ -104,5 +104,6 @@ class Environment {
 export {
     Environment,
     EnvironmentError,
+    EnvironmentErrorType,
     EnvironmentVariable,
 };

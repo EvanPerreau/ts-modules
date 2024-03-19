@@ -8,10 +8,6 @@ enum RoleErrorType {
     ROLE_NOT_FOUND = "Role not found",
     ROLE_ALREADY_EXISTS = "Role already exists",
     ROLE_NAME_REQUIRED = "Role name is required",
-    ROLE_ID_REQUIRED = "Role id is required",
-    ROLE_PERMISSION_ID_REQUIRED = "Role permission id is required",
-    ROLE_PERMISSION_NOT_FOUND = "Role permission not found",
-    ROLE_PERMISSION_ALREADY_EXISTS = "Role permission already exists",
     DATABASE_ERROR = "Database error",
 }
 
@@ -238,5 +234,68 @@ class Role implements RoleData {
                 error as string
             );
         }
+    }
+
+    /**
+     * A method that creates a new role.
+     * @param name The name of the role.
+     *
+     * @throws {RoleError} if an error occurs while creating the role
+     *
+     * @returns The created role.
+     */
+    public static async createRole(name: string): Promise<Role> {
+        // create a variable to store the role
+        let role: RoleData;
+
+        // if the name is empty
+        if (name === "") {
+            // throw a new Role error
+            throw new RoleError(
+                RoleErrorType.ROLE_NAME_REQUIRED,
+                "The role name is required"
+            );
+        }
+
+        let tempRole: Role | null = null;
+        // if the role already exists
+        try {
+            // get the role by name
+            tempRole = await Role.getRoleByName(name);
+        } catch (error) {
+            // if the error is not a role not found error
+            if ((error as RoleError).type !== RoleErrorType.ROLE_NOT_FOUND) {
+                // throw the error
+                throw error;
+            }
+        }
+
+        // if the role already exists
+        if (tempRole !== null) {
+            // throw a new Role error
+            throw new RoleError(
+                RoleErrorType.ROLE_ALREADY_EXISTS,
+                `The role with the name ${name} already exists`
+            );
+        }
+
+        // try to create the role
+        try {
+            // store the role in the role variable
+            role = await prisma.role.create({
+                data: {
+                    name: name,
+                },
+            });
+            // if an error occurs
+        } catch (error) {
+            // throw a new Role error
+            throw new RoleError(
+                RoleErrorType.DATABASE_ERROR,
+                error as string
+            );
+        }
+
+        return new Role(role, []);
     }
 }

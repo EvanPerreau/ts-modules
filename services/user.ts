@@ -10,7 +10,7 @@ interface UserData {
     name: string;
     email: string;
     password: string;
-    roleId: number;
+    // roleId: number;
 }
 
 /**
@@ -40,6 +40,7 @@ enum UserErrorType {
     INVALID_PASSWORD = "Invalid password",
     INVALID_EMAIL = "Invalid email",
     DATABASE_ERROR = "Database error",
+    INVALID_NAME = "Invalid name",
 }
 
 class UserError extends Error {
@@ -89,17 +90,17 @@ class User implements UserData {
     set email(value: string) {
         this.#email = value;
     }
-    get roleId(): number {
+    /* get roleId(): number {
         return this.#roleId;
-    }
-    set roleId(value: number) {
+    } */
+    /* set roleId(value: number) {
         this.#roleId = value;
-    }
+    } */
 
     #id: number;
     #name: string;
     #email: string;
-    #roleId: number;
+    // #roleId: number;
     #password: string;
 
     /**
@@ -123,7 +124,7 @@ class User implements UserData {
         this.#id = data.id;
         this.#name = data.name;
         this.#email = data.email;
-        this.#roleId = data.roleId;
+        // this.#roleId = data.roleId;
         this.#password = data.password;
     }
 
@@ -311,6 +312,15 @@ class User implements UserData {
         // declare the result variable as a promise that resolves to a user
         let result: Promise<User>;
 
+        // if the user name is invalid
+        if (new_user.name.length < 3) {
+            // throw a new UserError
+            throw new UserError(
+                UserErrorType.INVALID_NAME,
+                `Invalid name: ${new_user.name}`,
+            );
+        }
+
         // if the user's email is invalid
         if (!Email.validateEmail(new_user.email)) {
             // throw a new UserError
@@ -320,23 +330,39 @@ class User implements UserData {
             );
         }
 
+        let user_exists: User | null = null;
         // trying to get the user from the database
         try {
             // get user from database
-            await User.getByEmail(new_user.email);
+            user_exists = await User.getByEmail(new_user.email);
         // if an error occurs while querying the database -> can be a UserError.NOT_FOUND or UserError.DATABASE_ERROR
         } catch (error) {
             // if the user is not found
-            if (error instanceof UserError && error.type === UserErrorType.NOT_FOUND) {
+            if (!(error instanceof UserError && error.type === UserErrorType.NOT_FOUND)) {
                 // throw a new UserError
                 throw new UserError(
-                    UserErrorType.ALREADY_EXISTS,
-                    `User with email ${new_user.email} already exists`
-                );
-            // if another error occurs, throw it
-            } else {
-                throw error;
+                    UserErrorType.DATABASE_ERROR,
+                    error as string,
+                )
             }
+        }
+
+        // if the user already exists
+        if (user_exists !== null) {
+            // throw a new UserError
+            throw new UserError(
+                UserErrorType.ALREADY_EXISTS,
+                `User with email ${new_user.email} already exists`
+            );
+        }
+
+        // if the new user password is invalid
+        if (new_user.password.length < 8) {
+            // throw a new UserError
+            throw new UserError(
+                UserErrorType.INVALID_PASSWORD,
+                `Invalid password`,
+            );
         }
 
         // encrypt the user password
@@ -350,7 +376,7 @@ class User implements UserData {
                     name: new_user.name,
                     email: new_user.email,
                     password: new_user.password,
-                    roleId: new_user.roleId
+                    // roleId: new_user.roleId
                 }
             });
 
@@ -457,6 +483,19 @@ class User implements UserData {
      * ```
      */
     public async update(data: UpdateUserData): Promise<void> {
+
+        // if a new user name is present in the data
+        if (data.name) {
+            // if the new user name is invalid
+            if (data.name.length < 3) {
+                // throw a new UserError
+                throw new UserError(
+                    UserErrorType.INVALID_NAME,
+                    `Invalid name: ${data.name}`,
+                );
+            }
+        }
+
         // if a new user email is present in the data
         if (data.email) {
             // if the new user email is invalid
@@ -483,7 +522,7 @@ class User implements UserData {
                 // throw a new UserError
                 throw new UserError(
                     UserErrorType.INVALID_PASSWORD,
-                    `Invalid password: ${data.password}`,
+                    `Invalid password`,
                 );
             }
 
@@ -509,6 +548,28 @@ class User implements UserData {
                 error as string,
             );
         }
+
+        // if the new user email is present in the data
+        if (data.email) {
+            // update the email of the user
+            this.email = data.email;
+        }
+        // if the new user name is present in the data
+        if (data.name) {
+            // update the name of the user
+            this.name = data.name;
+        }
+        // if the new user password is present in the data
+        if (data.password) {
+            // update the password of the user
+            this.password = data.password;
+        }
+        // if the new user role id is present in the data
+
+        /* if (data.roleId) {
+            // update the role id of the user
+            this.roleId = data.roleId;
+        } */
     }
 
     /**
@@ -543,7 +604,6 @@ class User implements UserData {
             );
         }
     }
-
 }
 
 export {

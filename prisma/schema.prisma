@@ -5,7 +5,8 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -18,15 +19,15 @@ model User {
   name     String
   email    String @unique
   password String
-  roleId   Int
-  role     Role   @relation(fields: [roleId], references: [id])
+  // roleId   Int
+  // role     Role   @relation(fields: [roleId], references: [id])
 }
 
 // base user role model
 model Role {
   id             Int              @id @default(autoincrement())
   name           String           @unique
-  User           User[]
+  // User           User[]
   RolePermission RolePermission[]
 }
 
