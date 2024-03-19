@@ -4,6 +4,7 @@ import * as password from "./password";
 import * as token from "./token";
 import * as user from "./user";
 import * as permission from "./permission";
+import * as role from "./role";
 
 async function main(): Promise<void> {
     await Promise.all([
@@ -12,6 +13,7 @@ async function main(): Promise<void> {
         password.test,
         token.test,
         user.test,
-        permission.test
+        permission.test,
+        role.test
     ]);
 }

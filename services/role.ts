@@ -128,7 +128,7 @@ class Role implements RoleData {
         }
 
         // store the role permissions in the rolePermissions variable
-        rolePermissions = await Role.getRolePermissions(role.id);
+        rolePermissions = await Role.getPermissions(role.id);
 
         return new Role(role, rolePermissions);
     }
@@ -176,7 +176,7 @@ class Role implements RoleData {
         }
 
         // store the role permissions in the rolePermissions variable
-        rolePermissions = await Role.getRolePermissions(role.id);
+        rolePermissions = await Role.getPermissions(role.id);
 
         return new Role(role, rolePermissions);
     }
@@ -188,7 +188,7 @@ class Role implements RoleData {
      *
      * @returns The role data.
      */
-    public static async getRolePermissions(roleId: number): Promise<Permission[]> {
+    public static async getPermissions(roleId: number): Promise<Permission[]> {
         // create a variable to store the role permissions data
         let rolePermissions: RolePermissionData[] | null;
         let result: Permission[] = [];
@@ -238,18 +238,48 @@ class Role implements RoleData {
 
     /**
      * A method that creates a new role.
+     * @param permission The permission to remove from the role.
+     *
+     * @throws {RoleError} if an error occurs while creating the role permission
+     *
+     * @returns The created role.
+     */
+    public async removePermission(permission: Permission): Promise<void> {
+        // try to remove the permission
+        try {
+            // store the role permission in the database
+            await prisma.rolePermission.delete({
+                where: {
+                    roleId_permissionName: {
+                        roleId: this.id,
+                        permissionName: permission.name,
+                    },
+                },
+            });
+        // if an error occurs
+        } catch (error) {
+            // throw a new Role error
+            throw new RoleError(
+                RoleErrorType.DATABASE_ERROR,
+                error as string
+            );
+        }
+    }
+
+    /**
+     * A method that creates a new role.
      * @param name The name of the role.
      *
      * @throws {RoleError} if an error occurs while creating the role
      *
      * @returns The created role.
      */
-    public static async createRole(name: string): Promise<Role> {
+    public static async create(name: string): Promise<Role> {
         // create a variable to store the role
         let role: RoleData;
 
         // if the name is empty
-        if (name === "") {
+        if (name.replace(" ", "") === "") {
             // throw a new Role error
             throw new RoleError(
                 RoleErrorType.ROLE_NAME_REQUIRED,
@@ -298,4 +328,36 @@ class Role implements RoleData {
 
         return new Role(role, []);
     }
+
+    /**
+     * A method that deletes a role.
+     *
+     * @throws {RoleError} if an error occurs while deleting the role
+     */
+    public async delete(): Promise<void> {
+        // try to delete the role
+        try {
+            // delete the role from the database
+            await prisma.role.delete({
+                where: {
+                    id: this.id,
+                },
+            });
+            // if an error occurs
+        } catch (error) {
+            // throw a new Role error
+            throw new RoleError(
+                RoleErrorType.DATABASE_ERROR,
+                error as string
+            );
+        }
+    }
 }
+
+export {
+    Role,
+    RoleError,
+    RoleErrorType,
+    RoleData,
+    RolePermissionData,
+};

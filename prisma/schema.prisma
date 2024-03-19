@@ -35,8 +35,8 @@ model Role {
 model RolePermission {
   roleId         Int
   permissionName String
-  role           Role       @relation(fields: [roleId], references: [id])
-  permission     Permission @relation(fields: [permissionName], references: [name])
+  role           Role       @relation(fields: [roleId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  permission     Permission @relation(fields: [permissionName], references: [name], onUpdate: Cascade, onDelete: Cascade)
 
   @@id([roleId, permissionName])
 }
