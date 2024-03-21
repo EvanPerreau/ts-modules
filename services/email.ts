@@ -1,3 +1,8 @@
+import {createTransport, Transporter} from "nodemailer";
+import {Environment} from "./environment";
+import {environment} from "./global";
+import SMTPTransport from "nodemailer/lib/smtp-transport";
+
 /**
  * Enum representing the possible email errors.
  */
@@ -30,6 +35,19 @@ class EmailError extends Error {
  * A class that represents the email service.
  */
 abstract class Email {
+
+    // Create a new transporter for sending emails, using the environment variables
+    private static transporter: Transporter<SMTPTransport.SentMessageInfo> = createTransport({
+        host: environment.get("EMAIL_HOST"),
+        port: parseInt(environment.get("EMAIL_PORT")),
+        // Use `true` for port 465, `false` for all other ports
+        secure: environment.get("EMAIL_SECURE") === "true",
+        auth: {
+            user: environment.get("EMAIL_USER"),
+            pass: environment.get("EMAIL_PASSWORD"),
+        },
+    });
+
     /**
      * Validate an email address.
      * @param email
@@ -65,6 +83,59 @@ abstract class Email {
 
         return result;
     }
+
+    /**
+     * Send an email.
+     * @param to The email address to send the email to
+     * @param from The email address to send the email from
+     * @param subject The subject of the email
+     * @param text The text of the email
+     */
+    public static async sendEmail(to: string, from: string, subject: string, text: string): Promise<void> {
+        // try to send the email
+        try {
+            // send the email
+            await Email.transporter.sendMail({
+                from: from,
+                to: to,
+                subject: subject,
+                text: text,
+            });
+        } catch (error) {
+            // throw a new EmailError
+            throw new EmailError(
+                EmailErrorType.FATAL_ERROR,
+                error as string
+            );
+        }
+    }
+
+    /**
+     * Send an HTML email.
+     * @param to The email address to send the email to
+     * @param from The email address to send the email from
+     * @param subject The subject of the email
+     * @param html The HTML of the email
+     */
+    public static async sendHtmlEmail(to: string, from: string, subject: string, html: string): Promise<void> {
+        // try to send the email
+        try {
+            // send the email
+            await Email.transporter.sendMail({
+                from: from,
+                to: to,
+                subject: subject,
+                html: html,
+            });
+        } catch (error) {
+            // throw a new EmailError
+            throw new EmailError(
+                EmailErrorType.FATAL_ERROR,
+                error as string
+            );
+        }
+    }
+
 }
 
 export {
